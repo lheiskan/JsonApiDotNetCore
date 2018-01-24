@@ -141,11 +141,39 @@ namespace UnitTests
             Assert.Equal(1, documents.Data.Count);
         }
 
+        [Fact]
+        public void When_OmitNullValuedAttributesFromResponses_IsNotDefined_Build_IncludesNullableFields()
+        {
+            var documentBuilder = new DocumentBuilder(_jsonApiContextMock.Object);
+            var document = documentBuilder.Build(new Model());
+            Assert.True(document.Data.Attributes.ContainsKey("StringProperty"));
+        }
+
+        [Fact]
+        public void When_OmitNullValuedAttributesFromResponses_IsFalse_Build_IncludesNullableFields()
+        {
+            _options.OmitNullValuedAttributesFromResponses = false;
+            var documentBuilder = new DocumentBuilder(_jsonApiContextMock.Object);
+            var document = documentBuilder.Build(new Model());
+            Assert.True(document.Data.Attributes.ContainsKey("StringProperty"));
+        }
+
+        [Fact]
+        public void When_OmitNullValuedAttributesFromResponses_IsTrue_Build_DoesNotIncludeNullableFields()
+        {
+            _options.OmitNullValuedAttributesFromResponses = true;
+            var documentBuilder = new DocumentBuilder(_jsonApiContextMock.Object);
+            var document = documentBuilder.Build(new Model());
+            Assert.False(document.Data.Attributes.ContainsKey("StringProperty"));
+        }
+
         private class Model : Identifiable
         {
             [HasOne("related-model", Link.None)]
             public RelatedModel RelatedModel { get; set; }
             public int RelatedModelId { get; set; }
+            [Attr("StringProperty")]
+            public string StringProperty { get; set; }
         }
 
         private class RelatedModel : Identifiable

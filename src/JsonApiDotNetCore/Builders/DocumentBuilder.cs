@@ -33,7 +33,7 @@ namespace JsonApiDotNetCore.Builders
 
             var document = new Document
             {
-                Data = GetData(contextEntity, entity),
+                Data = GetData(contextEntity, entity, _jsonApiContext.Options.OmitNullValuedAttributesFromResponses),
                 Meta = GetMeta(entity)
             };
 
@@ -61,9 +61,10 @@ namespace JsonApiDotNetCore.Builders
             if(ShouldIncludePageLinks(contextEntity))
                 documents.Links = _jsonApiContext.PageManager.GetPageLinks(new LinkBuilder(_jsonApiContext));
 
+            var isOmitNullValuedAttributesFromResponse = _jsonApiContext.Options.OmitNullValuedAttributesFromResponses;
             foreach (var entity in enumeratedEntities)
             {
-                documents.Data.Add(GetData(contextEntity, entity));
+                documents.Data.Add(GetData(contextEntity, entity, isOmitNullValuedAttributesFromResponse));
                 documents.Included = AppendIncludedObject(documents.Included, contextEntity, entity);
             }
 
@@ -103,7 +104,7 @@ namespace JsonApiDotNetCore.Builders
             return includedObject;
         }
 
-        private DocumentData GetData(ContextEntity contextEntity, IIdentifiable entity)
+        private DocumentData GetData(ContextEntity contextEntity, IIdentifiable entity, bool isOmitNullValuedAttributesFromResponses=false)
         {
             var data = new DocumentData
             {
@@ -118,8 +119,14 @@ namespace JsonApiDotNetCore.Builders
 
             contextEntity.Attributes.ForEach(attr =>
             {
-                if(ShouldIncludeAttribute(attr))
-                    data.Attributes.Add(attr.PublicAttributeName, attr.GetValue(entity));
+                if (ShouldIncludeAttribute(attr))
+                {
+                    var value = attr.GetValue(entity);
+                    if (!(value == null && isOmitNullValuedAttributesFromResponses))
+                    {
+                        data.Attributes.Add(attr.PublicAttributeName, value);
+                    }
+                }
             });
 
             if (contextEntity.Relationships.Count > 0)

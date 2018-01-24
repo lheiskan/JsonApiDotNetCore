@@ -17,6 +17,7 @@ namespace JsonApiDotNetCore.Configuration
         public IContextGraph ContextGraph { get; set; }
         public bool RelativeLinks { get; set; }
         public bool AllowCustomQueryParameters { get; set; }
+        public bool OmitNullValuedAttributesFromResponses { get; set; }
 
         [Obsolete("JsonContract resolver can now be set on SerializerSettings.")]
         public IContractResolver JsonContractResolver
